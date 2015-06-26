@@ -2,7 +2,7 @@
 
 A hubot script for the Crescent Commute
 
-See [`src/commute.coffee`](src/commute.coffee) for full documentation.
+See [`src/commute.js`](src/commute.js) for full documentation.
 
 ## Installation
 
