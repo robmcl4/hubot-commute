@@ -37,7 +37,7 @@ module.exports = function (robot) {
         res.reply('Oops! I can\'t do that!');
         console.error(err.stack);
       } else {
-        res.reply('/code\n'+JSON.stringify(result));
+        res.reply(result['routes'][0]['summary'].indexOf('I-95') >= 0 ? "Take 95." : "Don't take 95.");
       }
     });
   });
