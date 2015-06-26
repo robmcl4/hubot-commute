@@ -1,5 +1,5 @@
 // Description
-//   A hubot script for the Crescent Commute
+//   A hubot script for calculating the time it would take to commute now
 //
 // Configuration:
 //   HUBOT_COMMUTE_MAPS_KEY: your google maps API key
