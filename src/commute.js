@@ -70,12 +70,12 @@ module.exports = function (robot) {
   // announce commute time at 4:55pm every week day
   new CronJob('00 55 16 * * 1-5', function() {
     doCommute(announceRoom, false);
-  }, null, true, null);
+  }, null, true, 'America/New_York');
 
   // announce commute time at 8:40am every week day
   new CronJob('00 40 08 * * 1-5', function() {
     doCommute(announceRoom, true);
-  }, null, true, null);
+  }, null, true, 'America/New_York');
 
   robot.respond(/commute to (work|home)/i, function(res) {
     doCommute(res.message.user.reply_to, res.match[1] == 'work');
