@@ -15,7 +15,7 @@
 //     }
 //
 // Commands:
-//   CrescentBot commute - Tells info about the afternoon commute
+//   CrescentBot commute to (work|home)- Tells info about the afternoon commute
 //
 // Notes:
 //   <optional notes required for the script>
@@ -34,12 +34,11 @@ var announceRoom = process.env['HUBOT_COMMUTE_ROOM'],
 module.exports = function (robot) {
   var api = robot.http(baseUrl).path(basePath);
 
-  var doCommute = function() {
-    var room = arguments.length == 1 ? arguments[0] : announceRoom;
+  var doCommute = function(room, toWork) {
     console.log(room);
     console.log(arguments);
     var data = JSON.stringify({
-      locations: [work, home]
+      locations: toWork ? [home, work] : [work, home]
     });
     api.header('Accept', 'application/json')
        .query({key: key})
@@ -54,24 +53,32 @@ module.exports = function (robot) {
          }, 0)/60);
          var isHighway = route.legs.reduce(function(prev, curr) {
            return prev || curr.maneuvers.reduce(function(prev, curr) {
-             return prev || curr.streets.indexOf('I-95 S') >= 0;
+             return prev || curr.streets.indexOf('I-95 S') >= 0
+                         || curr.streets.indexOf('I-95 N') >= 0;
            }, false);
          }, false);
          robot.messageRoom(
            room,
            (isHighway ? '' : 'don\'t ') +
-             'take the highway: the commute will take ' + mins + ' minutes'
+             'take the highway: the commute ' +
+             (toWork ? 'to' : 'from') +
+             ' work will take ' + mins + ' minutes'
          );
        });
   }
 
-  // announce commute time at 4:55pm every day
+  // announce commute time at 4:55pm every week day
   new CronJob('00 55 16 * * 1-5', function() {
-    doCommute();
+    doCommute(announceRoom, false);
   }, null, true, null);
 
-  robot.respond(/commute/, function(res) {
-    doCommute(res.message.user.reply_to);
+  // announce commute time at 8:40am every week day
+  new CronJob('00 40 08 * * 1-5', function() {
+    doCommute(announceRoom, true);
+  }, null, true, null);
+
+  robot.respond(/commute to (work|home)/i, function(res) {
+    doCommute(res.message.user.reply_to, res.match[1] == 'work');
   });
 
 }
