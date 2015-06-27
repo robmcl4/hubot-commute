@@ -5,6 +5,7 @@
 //   HUBOT_COMMUTE_MAPS_KEY: your mapquest API key
 //   HUBOT_COMMUTE_MAPS_WORK: your work address as a Location
 //   HUBOT_COMMUTE_MAPS_HOME: your home address as a Location
+//   HUBOT_COMMUTE_ROOM: the room to announce evening commute times in
 //   Locations are formatted as JSON strings:
 //     {
 //       "street":     "1 Happy Street",
@@ -14,14 +15,17 @@
 //     }
 //
 // Commands:
+//   CrescentBot commute - Tells info about the afternoon commute
 //
 // Notes:
 //   <optional notes required for the script>
 //
 // Author:
 //   Robert McLaughlin <rmclaughlin@constantcontact.com>
+var CronJob = require('cron').CronJob;
 
-var baseUrl = 'http://www.mapquestapi.com',
+var announceRoom = process.env['HUBOT_COMMUTE_ROOM'],
+    baseUrl = 'http://www.mapquestapi.com',
     basePath = '/directions/v2/route',
     key = process.env['HUBOT_COMMUTE_MAPS_KEY'],
     work = JSON.parse(process.env['HUBOT_COMMUTE_MAPS_WORK']),
@@ -30,8 +34,10 @@ var baseUrl = 'http://www.mapquestapi.com',
 module.exports = function (robot) {
   var api = robot.http(baseUrl).path(basePath);
 
-  robot.respond(/maps\sdebug/, function(res) {
-    console.log('beginning map debug');
+  var doCommute = function() {
+    var room = arguments.length == 1 ? arguments[0] : announceRoom;
+    console.log(room);
+    console.log(arguments);
     var data = JSON.stringify({
       locations: [work, home]
     });
@@ -40,7 +46,7 @@ module.exports = function (robot) {
        .post(data)(function(err, response, body) {
          if (err) {
            console.error(err.stack);
-           return res.reply('Oops!');
+           return robot.messageRoom(room, 'Oops! I messed up.');
          }
          var route = JSON.parse(body).route;
          var mins = Math.round(route.legs.reduce(function(prev, curr) {
@@ -51,8 +57,21 @@ module.exports = function (robot) {
              return prev || curr.streets.indexOf('I-95 S') >= 0;
            }, false);
          }, false);
-         res.reply((isHighway ? '' : 'don\'t ') +
-                   'take the highway: the commute will take ' + mins + ' minutes');
+         robot.messageRoom(
+           room,
+           (isHighway ? '' : 'don\'t ') +
+             'take the highway: the commute will take ' + mins + ' minutes'
+         );
        });
+  }
+
+  // announce commute time at 4:55pm every day
+  new CronJob('00 55 16 * * 1-5', function() {
+    doCommute();
+  }, null, true, null);
+
+  robot.respond(/commute/, function(res) {
+    doCommute(res.message.user.reply_to);
   });
+
 }

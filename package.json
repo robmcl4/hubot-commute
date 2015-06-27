@@ -16,7 +16,9 @@
     "url": "https://github.com/hubot-scripts/hubot-commute/issues"
   },
 
-  "dependencies": {},
+  "dependencies": {
+    "cron": "~1.0.9"
+  },
 
   "peerDependencies": {
     "hubot": "2.x"
