@@ -16,9 +16,7 @@
     "url": "https://github.com/hubot-scripts/hubot-commute/issues"
   },
 
-  "dependencies": {
-    "googlemaps": "~1.0.1"
-  },
+  "dependencies": {},
 
   "peerDependencies": {
     "hubot": "2.x"
