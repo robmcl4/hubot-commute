@@ -35,7 +35,6 @@ module.exports = function (robot) {
     var data = JSON.stringify({
       locations: [work, home]
     });
-    console.log(data);
     api.header('Accept', 'application/json')
        .query({key: key})
        .post(data)(function(err, response, body) {
@@ -43,7 +42,17 @@ module.exports = function (robot) {
            console.error(err.stack);
            return res.reply('Oops!');
          }
-         res.reply(body);
+         var route = JSON.parse(body).route;
+         var mins = Math.round(route.legs.reduce(function(prev, curr) {
+           return prev + curr.time;
+         }, 0)/60);
+         var isHighway = route.legs.reduce(function(prev, curr) {
+           return prev || curr.maneuvers.reduce(function(prev, curr) {
+             return prev || curr.streets.indexOf('I-95 S') >= 0;
+           }, false);
+         }, false);
+         res.reply((isHighway ? '' : 'don\'t ') +
+                   'take the highway: the commute will take ' + mins + ' minutes');
        });
   });
 }
