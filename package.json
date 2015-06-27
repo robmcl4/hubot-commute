@@ -1,6 +1,6 @@
 {
   "name": "hubot-commute",
-  "description": "A hubot script for the Crescent Commute",
+  "description": "A hubot script for calculating the time it would take to commute now",
   "version": "0.0.0",
   "author": "Robert McLaughlin <rmclaughlin@constantcontact.com>",
   "license": "MIT",

@@ -1,6 +1,6 @@
 # hubot-commute
 
-A hubot script for the Crescent Commute
+A hubot script for calculating the time it would take to commute now
 
 See [`src/commute.coffee`](src/commute.coffee) for full documentation.
 
