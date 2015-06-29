@@ -38,7 +38,9 @@ module.exports = function (robot) {
     console.log(room);
     console.log(arguments);
     var data = JSON.stringify({
-      locations: toWork ? [home, work] : [work, home]
+      locations: toWork ? [home, work] : [work, home],
+      useTraffic: true,
+      timeType: 1
     });
     api.header('Accept', 'application/json')
        .query({key: key})
@@ -48,9 +50,7 @@ module.exports = function (robot) {
            return robot.messageRoom(room, 'Oops! I messed up.');
          }
          var route = JSON.parse(body).route;
-         var mins = Math.round(route.legs.reduce(function(prev, curr) {
-           return prev + curr.time;
-         }, 0)/60);
+         var mins = Math.round(route.realTime/60);
          var isHighway = route.legs.reduce(function(prev, curr) {
            return prev || curr.maneuvers.reduce(function(prev, curr) {
              return prev || curr.streets.indexOf('I-95 S') >= 0
