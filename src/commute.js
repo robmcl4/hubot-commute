@@ -26,7 +26,7 @@ var CronJob = require('cron').CronJob;
 
 var announceRoom = process.env['HUBOT_COMMUTE_ROOM'],
     baseUrl = 'http://www.mapquestapi.com',
-    basePath = '/directions/v2/route',
+    basePath = '/directions/v2/alternateroutes',
     key = process.env['HUBOT_COMMUTE_MAPS_KEY'],
     work = JSON.parse(process.env['HUBOT_COMMUTE_MAPS_WORK']),
     home = JSON.parse(process.env['HUBOT_COMMUTE_MAPS_HOME']);
@@ -40,7 +40,8 @@ module.exports = function (robot) {
     var data = JSON.stringify({
       locations: toWork ? [home, work] : [work, home],
       useTraffic: true,
-      timeType: 1
+      timeType: 1,
+      maxRoutes: 4
     });
     api.header('Accept', 'application/json')
        .query({key: key})
@@ -49,21 +50,55 @@ module.exports = function (robot) {
            console.error(err.stack);
            return robot.messageRoom(room, 'Oops! I messed up.');
          }
-         var route = JSON.parse(body).route;
-         var mins = Math.round(route.realTime/60);
-         var isHighway = route.legs.reduce(function(prev, curr) {
-           return prev || curr.maneuvers.reduce(function(prev, curr) {
-             return prev || curr.streets.indexOf('I-95 S') >= 0
-                         || curr.streets.indexOf('I-95 N') >= 0;
-           }, false);
-         }, false);
-         robot.messageRoom(
-           room,
-           (isHighway ? '' : 'don\'t ') +
-             'take the highway: the commute ' +
-             (toWork ? 'to' : 'from') +
-             ' work will take ' + mins + ' minutes'
-         );
+
+         // construct the list of routes
+         var routes = (function() {
+           var route = JSON.parse(body).route;
+           var ret = route.alternateRoutes.map(function(r) {return r.route});
+           delete route.alternateRoutes;
+           ret.push(route);
+           // sort by total
+           return ret.sort(function(a, b) {b.realTime - a.realTime});
+         })();
+
+         // construct the summaries
+         var summaries = (function() {
+           var summaries = [];
+           // we get two exit 26s typically... only grab the first
+           var gotA26 = false;
+           for (var i=0; i<routes.length; i++) {
+             var route = routes[i];
+             var summary;
+             if (toWork) {
+               console.log(route)
+               if (route.name.match(/I-95 N/)) {
+                 summary = "The highway";
+               } else if (route.name.match(/Totten Pond/)) {
+                 summary = "The highway (alt. entrance)"
+               } else {
+                 summary = "Unrecognized route: '" + route.name + "''";
+               }
+             } else {
+               if (route.name.match(/Totten Pond/)) {
+                 summary = "Exit 27 to Totten Pond Rd";
+               } else if (route.name.match(/(US-20 E|Vernon St)/)) {
+                 if (gotA26)
+                   continue;
+                 gotA26 = true;
+                 summary = "Exit 26 to Waltham";
+               } else {
+                 summary = "Unrecognized route: '" + route.name + "''";
+               }
+             }
+             var mins = Math.round(route.realTime/60);
+             summaries.push(summary + ' will take ' + mins + ' minutes');
+           }
+           return summaries;
+         })();
+
+         var msg = summaries.join('\n');
+
+         robot.messageRoom(room, msg);
        });
   }
 
