@@ -1,7 +1,7 @@
 {
   "name": "hubot-commute",
-  "description": "A hubot script for the Crescent Commute",
-  "version": "0.0.0",
+  "description": "A hubot script for calculating the time it would take to commute now",
+  "version": "0.1.0",
   "author": "Robert McLaughlin <rmclaughlin@constantcontact.com>",
   "license": "MIT",
 
@@ -17,7 +17,7 @@
   },
 
   "dependencies": {
-    "googlemaps": "~1.0.1"
+    "cron": "~1.0.9"
   },
 
   "peerDependencies": {
