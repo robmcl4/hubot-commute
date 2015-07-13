@@ -1,7 +1,7 @@
 {
   "name": "hubot-commute",
   "description": "A hubot script for calculating the time it would take to commute now",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "Robert McLaughlin <rmclaughlin@constantcontact.com>",
   "license": "MIT",
 
